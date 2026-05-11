@@ -66,7 +66,7 @@ const changePassword = async () => {
       JSON.parse(localStorage.getItem("user"))?.token;
 
     const res = await fetch(
-      "http://localhost:5000/api/auth/change-password",
+      "https://i-marketbackend.onrender.com/api/auth/change-password",
       {
         method: "PUT",
         headers: {
@@ -131,7 +131,7 @@ const changePassword = async () => {
         user?.token || JSON.parse(localStorage.getItem("user"))?.token;
 
       const res = await fetch(
-        `http://localhost:5000/api/${role}/delete-account`,
+        `https://i-marketbackend.onrender.com/api/${role}/delete-account`,
         {
           method: "DELETE",
           headers: {
