@@ -23,7 +23,7 @@ export const SocketProvider = ({ children }) => {
   useEffect(() => {
     if (!user?._id) return;
 
-    const s = io("http://localhost:5000");
+    const s = io("https://i-marketbackend.onrender.com");
     setSocket(s);
 
     // register user
