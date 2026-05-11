@@ -20,7 +20,7 @@ const GroupChatDashboard = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  const backendURL = "http://localhost:5000";
+  const backendURL = "https://i-marketbackend.onrender.com";
 
   const fetchRooms = async () => {
     try {
