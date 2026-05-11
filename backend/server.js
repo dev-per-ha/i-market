@@ -31,11 +31,14 @@ const profileRoutes = require("./routes/profileRoutes");
 const reportRoutes = require("./routes/reportRoutes");
 const verifyRoutes = require("./routes/verifyRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
+
 // =====================
 // APP SETUP
 // =====================
 const app = express();
+
 app.use(express.json());
+
 app.use(cors({
   origin: "*",
   credentials: true
@@ -44,6 +47,11 @@ app.use(cors({
 // Static files
 const uploadsPath = path.join(__dirname, "uploads");
 app.use("/uploads", express.static(uploadsPath));
+
+// Test route (IMPORTANT for Render)
+app.get("/", (req, res) => {
+  res.send("API is running 🚀");
+});
 
 // Routes
 app.use("/api/auth", authRoutes);
@@ -63,16 +71,10 @@ app.use("/api/profile", profileRoutes);
 app.use("/api/reports", reportRoutes);
 app.use("/api/verify-account", verifyRoutes);
 app.use("/api/payment", paymentRoutes);
-// DB
-mongoose
-  .connect(process.env.MONGO_URI)
-  .then(() => console.log("MongoDB Connected ✅"))
-  .catch((err) => console.error("MongoDB Error:", err));
 
 // =====================
-// SERVER + SOCKET.IO
+// SERVER + SOCKET
 // =====================
-const PORT = process.env.PORT || 5000;
 const server = http.createServer(app);
 
 const io = new Server(server, {
@@ -85,23 +87,19 @@ const io = new Server(server, {
 app.set("io", io);
 
 // =====================
-// SOCKET LOGIC (FIXED VERSION)
+// SOCKET LOGIC
 // =====================
 let onlineUsers = {};
 
 io.on("connection", (socket) => {
   console.log("User connected:", socket.id);
 
-  // =====================
-  // REGISTER USER (IMPORTANT)
-  // =====================
   socket.on("register", (userId) => {
     if (!userId) return;
 
     socket.userId = userId;
     onlineUsers[userId] = socket.id;
 
-    // auto join notification room
     socket.join(userId);
 
     io.emit("onlineUsers", Object.keys(onlineUsers));
@@ -109,9 +107,6 @@ io.on("connection", (socket) => {
     console.log("🔵 Registered user:", userId);
   });
 
-  // =====================
-  // JOIN NOTIFICATION ROOM (FIXED)
-  // =====================
   socket.on("joinNotification", (userId) => {
     if (!userId) return;
 
@@ -121,9 +116,6 @@ io.on("connection", (socket) => {
     console.log("🔔 Joined notification room:", userId);
   });
 
-  // =====================
-  // CHAT ROOM
-  // =====================
   socket.on("joinRoom", (roomId) => {
     socket.join(roomId);
   });
@@ -174,9 +166,6 @@ io.on("connection", (socket) => {
     }
   });
 
-  // =====================
-  // DISCONNECT
-  // =====================
   socket.on("disconnect", () => {
     if (socket.userId) {
       delete onlineUsers[socket.userId];
@@ -189,8 +178,20 @@ io.on("connection", (socket) => {
 });
 
 // =====================
-// START SERVER
+// CONNECT DB FIRST (FIX)
 // =====================
-server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT} 🚀`);
-});
+const PORT = process.env.PORT || 5000;
+
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => {
+    console.log("MongoDB Connected ✅");
+
+    // START SERVER ONLY AFTER DB CONNECTS
+    server.listen(PORT, () => {
+      console.log(`Server running on port ${PORT} 🚀`);
+    });
+  })
+  .catch((err) => {
+    console.error("MongoDB Error:", err);
+    process.exit(1);
+  });
